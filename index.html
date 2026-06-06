@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Теорема Байеса и научный метод</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,'Helvetica Neue',sans-serif;font-size:18px;line-height:1.5;background:#FFFFFF;color:#111111}
+header{background:#14305C;color:#FFFFFF;padding:1rem 2rem}
+header h1{font-size:26px;font-weight:700}
+header p{font-size:16px;opacity:.9;margin-top:.2rem}
+main{max-width:1100px;margin:0 auto;padding:0 1.5rem 2rem}
+section{padding:1.4rem 0;border-bottom:2px solid #14305C}
+section:last-child{border-bottom:none}
+.stitle{font-size:21px;font-weight:700;color:#14305C;margin-bottom:1rem;text-transform:uppercase;letter-spacing:.03em}
+.formula-box{background:#EEF3FA;border:2px solid #14305C;padding:.9rem 1.5rem;text-align:center;font-size:26px;font-weight:700;font-family:'Courier New',monospace;color:#14305C;margin-bottom:1rem}
+.def-table{width:100%;border-collapse:collapse;font-size:17px}
+.def-table th{background:#14305C;color:#FFF;padding:.65rem 1rem;text-align:left;font-size:16px}
+.def-table td{padding:.7rem 1rem;border:1px solid #9AA4B4;vertical-align:top}
+.def-table tr:nth-child(even) td{background:#F4F6FA}
+.sym{font-family:'Courier New',monospace;font-size:20px;font-weight:700;color:#14305C;white-space:nowrap}
+/* Scientists grid */
+.sci-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin:.8rem 0}
+.sci-card{border:2px solid #999;padding:1rem}
+.ski .sci-title{color:#7A1010;font-size:19px;font-weight:700;margin-bottom:.8rem;padding-bottom:.5rem;border-bottom:2px solid #7A1010}
+.bel .sci-title{color:#0F5C2E;font-size:19px;font-weight:700;margin-bottom:.8rem;padding-bottom:.5rem;border-bottom:2px solid #0F5C2E}
+/* Sliders */
+.sr{margin-bottom:.85rem}
+.sl{display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem}
+.sl span:first-child{font-size:16px;font-weight:600;color:#222}
+.sv{font-family:'Courier New',monospace;font-size:22px;font-weight:700;min-width:55px;text-align:right}
+input[type=range]{-webkit-appearance:none;width:100%;height:10px;background:#C0C6D4;outline:none;cursor:pointer;border-radius:5px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid #FFF}
+.ski input[type=range]::-webkit-slider-thumb{background:#7A1010;box-shadow:0 0 0 2px #7A1010}
+.bel input[type=range]::-webkit-slider-thumb{background:#0F5C2E;box-shadow:0 0 0 2px #0F5C2E}
+.shared-slider input[type=range]::-webkit-slider-thumb{background:#14305C;box-shadow:0 0 0 2px #14305C}
+.dq-sl input[type=range]::-webkit-slider-thumb{background:#14305C;box-shadow:0 0 0 2px #14305C}
+/* Result boxes */
+.res{margin-top:.85rem;padding:1rem;text-align:center}
+.res-label{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#555;margin-bottom:.2rem}
+.res-num{font-family:'Courier New',monospace;font-size:48px;font-weight:700;line-height:1}
+.res-fml{font-size:15px;color:#555;margin-top:.3rem;font-family:'Courier New',monospace}
+.ski .res{background:#FFF0F0;border:2px solid #7A1010}
+.ski .res-num{color:#7A1010}
+.bel .res{background:#F0FFF5;border:2px solid #0F5C2E}
+.bel .res-num{color:#0F5C2E}
+/* Error state */
+.res.err{background:#FFF0F0;border:2px solid #CC0000}
+.res.err .res-num{color:#CC0000}
+/* Progress bars */
+.pw{height:14px;background:#DDE2EA;border-radius:7px;margin-top:.6rem;overflow:hidden}
+.pb{height:100%;border-radius:7px;transition:width .35s ease}
+.pb-ski{background:#7A1010}.pb-bel{background:#0F5C2E}
+/* Shared row */
+.shared-row{padding:.85rem 1rem;background:#EEF3FA;border:2px solid #14305C;margin:.7rem 0}
+.shared-row .sl span:first-child{font-size:17px;font-weight:700;color:#14305C}
+.shared-row .sv{color:#14305C}
+/* Implied P(E|¬H) display */
+.implied{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.5rem 0}
+.implied-cell{padding:.6rem .8rem;border:1px solid #9AA4B4;background:#F9FAFC}
+.implied-label{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#555}
+.implied-val{font-family:'Courier New',monospace;font-size:20px;font-weight:700;margin-top:.15rem}
+.implied-val.ok{color:#0F5C2E}.implied-val.warn{color:#CC0000}
+/* Error banner */
+.err-banner{background:#FFF0F0;border:2px solid #CC0000;border-left:5px solid #CC0000;padding:.7rem 1rem;font-size:16px;font-weight:700;color:#CC0000;margin-top:.6rem;display:none}
+/* Commentary */
+.comm{margin-top:.85rem;padding:.85rem 1.1rem;background:#FFF8EE;border-left:5px solid #C07000;font-size:17px;font-weight:600;color:#111;line-height:1.55}
+/* Factor grid */
+.fgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin:.8rem 0}
+.fc{border:2px solid #14305C;padding:.85rem}
+.fc h4{font-size:16px;font-weight:700;color:#14305C;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.03em}
+.fc ul{list-style:none;font-size:16px}
+.fc ul li{padding:.2rem 0 .2rem 1.2rem;position:relative}
+.fc ul li::before{content:'—';position:absolute;left:0;color:#14305C;font-weight:700}
+/* DQ */
+.dq-setup{background:#F5F5F5;border:2px solid #888;padding:.85rem 1.1rem;margin-bottom:.9rem;font-size:17px;line-height:1.6}
+.dq-params{display:grid;grid-template-columns:1.2fr 1fr;gap:1.2rem;margin:.8rem 0;align-items:start}
+.dq-fixed{background:#EEF3FA;border:2px solid #9AA4B4;padding:.85rem}
+.dq-fixed-label{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#444;margin-bottom:.55rem}
+.dq-fv{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.dq-fi{text-align:center;padding:.55rem;background:#FFF;border:1px solid #C0C6D4}
+.dq-sym{font-family:'Courier New',monospace;font-size:17px;font-weight:700;color:#14305C}
+.dq-fi-desc{font-size:13px;color:#555;margin:.15rem 0}
+.dq-fi-num{font-family:'Courier New',monospace;font-size:26px;font-weight:700}
+.bad{color:#7A1010}
+.dq-rrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:#888;border:2px solid #888;margin:.8rem 0}
+.dq-rc{background:#FFF;padding:.7rem;text-align:center}
+.dq-rl{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#555;margin-bottom:.2rem}
+.dq-rn{font-family:'Courier New',monospace;font-size:32px;font-weight:700;color:#14305C}
+.dq-pw{height:18px;background:#DDE2EA;border-radius:9px;margin:.35rem 0 .8rem;overflow:hidden}
+.dq-pb{height:100%;border-radius:9px;transition:width .35s ease,background .35s ease}
+.verdict{padding:.75rem 1rem;font-size:17px;font-weight:700;border-left:5px solid;margin-top:.25rem}
+.v-stop{background:#FFF0F0;border-color:#7A1010;color:#7A1010}
+.v-go{background:#F0FFF5;border-color:#0F5C2E;color:#0F5C2E}
+.v-wait{background:#EEF3FA;border-color:#14305C;color:#14305C}
+.range-hints{display:flex;justify-content:space-between;font-size:13px;color:#777;margin-top:.2rem}
+/* Note box */
+.note{background:#FFFBF0;border:1px solid #D4A800;padding:.6rem 1rem;font-size:15px;font-weight:600;color:#5A4400;margin-top:.6rem}
+.note strong{color:#3A2800}
+</style>
+</head>
+<body>
+<header>
+  <h1>Теорема Байеса и научный метод</h1>
+  <p>Философия науки · Лекция-6 · Интерактивный демонстрационный инструмент</p>
+</header>
+<main>
+
+<!-- 1. FORMULA -->
+<section>
+  <div class="stitle">1. Формула и определение частей</div>
+  <div class="formula-box">P(H | E) &nbsp;=&nbsp; P(H) &times; P(E | H) &nbsp;/&nbsp; P(E)</div>
+  <table class="def-table">
+    <thead><tr><th style="width:110px">Символ</th><th>Что означает</th><th style="width:310px">Полная запись</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="sym">P(H)</span></td>
+        <td><strong>Начальная вера в гипотезу</strong> — априорная вероятность. Насколько мы верим в H до проведения опыта.</td>
+        <td>P (гипотеза H истинна независимо от опыта)</td>
+      </tr>
+      <tr>
+        <td><span class="sym">P(E|H)</span></td>
+        <td><strong>Правдоподобие свидетельства при верной H.</strong> Насколько вероятно появление свидетельства E, если гипотеза H верна.</td>
+        <td>P (свидетельство E наблюдается | гипотеза H истинна)</td>
+      </tr>
+      <tr>
+        <td><span class="sym">P(E)</span></td>
+        <td><strong>Распространённость свидетельства</strong> — общая вероятность свидетельства E при всех условиях.<br>
+        <span style="font-family:'Courier New',monospace;font-size:15px;color:#14305C">P(E) = P(E|H)&middot;P(H) + P(E|&not;H)&middot;P(&not;H)</span><br>
+        <strong>Ограничение:</strong> P(E) &ge; P(H) &times; P(E|H) — иначе P(H|E) &gt; 1, что невозможно.</td>
+        <td>P(E|H)&middot;P(H) + P(E|&not;H)&middot;P(&not;H)<br><small style="color:#555">= вероятность E при верной H<br>+ вероятность E при ложной H</small></td>
+      </tr>
+      <tr>
+        <td><span class="sym">P(H|E)</span></td>
+        <td><strong>Новая уверенность в гипотезе</strong> после получения свидетельства E — апостериорная вероятность. То, что мы вычисляем.</td>
+        <td>P (гипотеза H истинна | свидетельство E наблюдалось)</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 2. TWO SCIENTISTS -->
+<section>
+  <div class="stitle">2. Пример: два учёных — одно свидетельство</div>
+  <p style="font-size:17px;margin-bottom:.8rem">Одно и то же свидетельство E. Одна распространённость P(E). Разный стартовый прайор — разные выводы.</p>
+
+  <div class="shared-row shared-slider">
+    <div class="sl">
+      <span>P(E) — распространённость свидетельства (общая для обоих). Ограничение: P(E) &ge; P(H) &times; P(E|H)</span>
+      <span class="sv" id="pe-v">80%</span>
+    </div>
+    <input type="range" id="pe" min="1" max="99" value="80" oninput="upAll()">
+  </div>
+
+  <div class="sci-grid">
+    <div class="sci-card ski">
+      <div class="sci-title">Учёный № 1 — Скептик</div>
+      <div class="sr">
+        <div class="sl"><span>P(H) — начальная вера в гипотезу</span><span class="sv" id="s1ph-v" style="color:#7A1010">10%</span></div>
+        <input type="range" id="s1ph" min="1" max="99" value="10" oninput="upAll()">
+      </div>
+      <div class="sr">
+        <div class="sl"><span>P(E|H) — правдоподобие при верной H</span><span class="sv" id="s1eh-v" style="color:#7A1010">70%</span></div>
+        <input type="range" id="s1eh" min="1" max="99" value="70" oninput="upAll()">
+      </div>
+      <div class="implied">
+        <div class="implied-cell">
+          <div class="implied-label">P(H) &times; P(E|H)</div>
+          <div class="implied-val" id="s1-prod">—</div>
+        </div>
+        <div class="implied-cell">
+          <div class="implied-label">Подразумеваемый P(E|&not;H)</div>
+          <div class="implied-val" id="s1-penh">—</div>
+        </div>
+      </div>
+      <div class="err-banner" id="s1-err">P(E) &lt; P(H)&times;P(E|H) — невозможная комбинация! Увеличьте P(E).</div>
+      <div class="res" id="s1-res">
+        <div class="res-label">Апостериорная P(H|E)</div>
+        <div class="res-num" id="s1-po">—</div>
+        <div class="res-fml" id="s1-fml">—</div>
+        <div class="pw"><div class="pb pb-ski" id="s1-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="sci-card bel">
+      <div class="sci-title">Учёный № 2 — Сторонник</div>
+      <div class="sr">
+        <div class="sl"><span>P(H) — начальная вера в гипотезу</span><span class="sv" id="s2ph-v" style="color:#0F5C2E">60%</span></div>
+        <input type="range" id="s2ph" min="1" max="99" value="60" oninput="upAll()">
+      </div>
+      <div class="sr">
+        <div class="sl"><span>P(E|H) — правдоподобие при верной H</span><span class="sv" id="s2eh-v" style="color:#0F5C2E">85%</span></div>
+        <input type="range" id="s2eh" min="1" max="99" value="85" oninput="upAll()">
+      </div>
+      <div class="implied">
+        <div class="implied-cell">
+          <div class="implied-label">P(H) &times; P(E|H)</div>
+          <div class="implied-val" id="s2-prod">—</div>
+        </div>
+        <div class="implied-cell">
+          <div class="implied-label">Подразумеваемый P(E|&not;H)</div>
+          <div class="implied-val" id="s2-penh">—</div>
+        </div>
+      </div>
+      <div class="err-banner" id="s2-err">P(E) &lt; P(H)&times;P(E|H) — невозможная комбинация! Увеличьте P(E).</div>
+      <div class="res" id="s2-res">
+        <div class="res-label">Апостериорная P(H|E)</div>
+        <div class="res-num" id="s2-po">—</div>
+        <div class="res-fml" id="s2-fml">—</div>
+        <div class="pw"><div class="pb pb-bel" id="s2-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Почему P(H|E) растёт при уменьшении P(E)?</strong> Это корректно. Уменьшение P(E) при фиксированных P(H) и P(E|H) означает, что P(E|¬H) тоже уменьшается: свидетельство становится редким при ложной H. Редкое свидетельство при высоком P(E|H) — сильный аргумент в пользу H. Байесовский фактор P(E|H)/P(E|¬H) растёт. Ограничение: P(E) &ge; P(H)&times;P(E|H) — иначе P(H|E) &gt; 1 (невозможно).
+  </div>
+
+  <div style="border:2px solid #14305C;padding:1rem 1.2rem;background:#F9FAFC;margin:.7rem 0">
+    <div style="font-size:17px;font-weight:700;color:#14305C;margin-bottom:.6rem">Что означает P(E) на практике?</div>
+    <p style="font-size:16px;margin-bottom:.5rem">
+      P(E) — это <strong>как часто встречается свидетельство E само по себе</strong>, независимо от гипотезы.
+      Чем чаще E встречается в природе — тем меньше оно говорит о гипотезе.
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:.6rem 0">
+      <div style="background:#FFF0F0;border-left:4px solid #7A1010;padding:.7rem">
+        <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#7A1010;margin-bottom:.3rem">Высокое P(E) = 90%</div>
+        <div style="font-size:15px;color:#333">Симптом встречается у 9 из 10 пациентов — из-за питания, стресса, кофе. Увидев его, вы не удивились. Он ни о чём не говорит.</div>
+        <div style="font-family:'Courier New',monospace;font-size:18px;font-weight:700;color:#7A1010;margin-top:.4rem">P(H|E) мало</div>
+      </div>
+      <div style="background:#F0FFF5;border-left:4px solid #0F5C2E;padding:.7rem">
+        <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#0F5C2E;margin-bottom:.3rem">Низкое P(E) = 5%</div>
+        <div style="font-size:15px;color:#333">Симптом встречается у 1 из 20. Увидев его — вы удивились. Это редкость — значит, это информация.</div>
+        <div style="font-family:'Courier New',monospace;font-size:18px;font-weight:700;color:#0F5C2E;margin-top:.4rem">P(H|E) велико</div>
+      </div>
+    </div>
+    <div style="font-size:16px;font-weight:700;color:#111;border-top:1px solid #C0C6D4;padding-top:.55rem;margin-top:.2rem">
+      Если все кашляют — кашель не является симптомом. Количество информации = −log P(E): редкое событие несёт больше информации.
+    </div>
+  </div>
+
+  <div class="comm" id="sci-comm">—</div>
+</section>
+
+<!-- 3. WHAT DETERMINES P(H) -->
+<section>
+  <div class="stitle">3. От чего зависит начальная вера в гипотезу?</div>
+  <div class="fgrid">
+    <div class="fc">
+      <h4>P(H) — априорная вероятность</h4>
+      <ul>
+        <li>Теоретические предпосылки (онтология теории, парадигма, модель, формализм...)</li>
+        <li>Предыдущие опыты</li>
+        <li>Вера в авторитет учёных</li>
+        <li>Привычка</li>
+      </ul>
+    </div>
+    <div class="fc">
+      <h4>P(E|H) — правдоподобие при H</h4>
+      <ul>
+        <li>Число альтернативных объяснений опыта</li>
+        <li>Число опровергающих опытов</li>
+        <li>Теоретическая нагруженность опыта</li>
+      </ul>
+    </div>
+    <div class="fc">
+      <h4>P(E) — распространённость свидетельства</h4>
+      <ul>
+        <li>Число ограничений и идеализаций в опыте</li>
+        <li>Теоретическая нагруженность опыта</li>
+        <li>Точность приборов</li>
+        <li>Дизайн опыта (повторяемость, переменные, статистика...)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 4. DUHEM-QUINE -->
+<section>
+  <div class="stitle">4. Тезис Дюгема–Куайна: байесовское объяснение устойчивости теорий</div>
+  <div class="dq-setup">
+    <strong>Сценарий (медицина):</strong> Исследователи тестируют препарат X против опухоли Y. Клинический эксперимент показал <strong>неудовлетворительные результаты</strong>.<br>
+    <strong>H</strong> = «Препарат X эффективен»&nbsp;&nbsp;&nbsp;&nbsp;
+    <strong>E</strong> = «Эксперимент показал неудачу»<br>
+    <em>Здесь P(E) вычисляется из P(H), P(E|H) и P(E|&not;H) — ошибка невозможна.</em>
+  </div>
+  <div class="dq-params">
+    <div class="dq-sl">
+      <div class="sl" style="margin-bottom:.35rem">
+        <span style="font-size:17px;font-weight:700">P(H) — начальная вера в препарат</span>
+        <span class="sv" id="dq-ph-v" style="color:#14305C;font-size:24px">50%</span>
+      </div>
+      <input type="range" id="dq-ph" min="1" max="99" value="50" oninput="upDQ()">
+      <div class="range-hints"><span>Скептик 1%</span><span>Нейтральный 50%</span><span>99% Разработчик</span></div>
+    </div>
+    <div class="dq-fixed">
+      <div class="dq-fixed-label">Параметры эксперимента (фиксированы)</div>
+      <div class="dq-fv">
+        <div class="dq-fi">
+          <div class="dq-sym">P(E|H)</div>
+          <div class="dq-fi-desc">Неудача при работающем препарате</div>
+          <div class="dq-fi-num bad">15%</div>
+        </div>
+        <div class="dq-fi">
+          <div class="dq-sym">P(E|&not;H)</div>
+          <div class="dq-fi-desc">Неудача при неэффективном препарате</div>
+          <div class="dq-fi-num">70%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dq-rrow">
+    <div class="dq-rc">
+      <div class="dq-rl">P(H) — до опыта</div>
+      <div class="dq-rn" id="dq-pr">—</div>
+    </div>
+    <div class="dq-rc" style="background:#F4F6FA">
+      <div class="dq-rl">P(E) = P(E|H)&middot;P(H) + P(E|&not;H)&middot;P(&not;H)</div>
+      <div class="dq-rn" style="color:#555;font-size:22px" id="dq-pe">—</div>
+    </div>
+    <div class="dq-rc">
+      <div class="dq-rl">P(H|E) — после неудачи</div>
+      <div class="dq-rn" id="dq-po">—</div>
+    </div>
+  </div>
+  <div class="dq-pw"><div class="dq-pb" id="dq-bar" style="width:0%"></div></div>
+  <div class="verdict" id="dq-verdict">—</div>
+  <div class="comm" id="dq-comm">—</div>
+</section>
+
+
+<!-- 5. NEUROSCIENCE: ACCUMULATION -->
+<section>
+  <div class="stitle">5. Пример из нейрофизиологии: накопление свидетельств ведёт к конвергенции независимо от P(H)</div>
+
+  <p style="font-size:17px;margin-bottom:.9rem">
+    <strong>H</strong> = «Долговременная потенциация (ДП) — клеточный механизм долговременной памяти» (гипотеза Хебба–Блисса)<br>
+    Пять независимых свидетельств, каждое с одинаковой диагностической силой: P(E&#x1D62;|H) = 80%, P(E&#x1D62;|¬H) = 20%. Байесовский фактор LR = 4 для каждого свидетельства.
+  </p>
+
+  <div style="border:2px solid #9AA4B4;padding:.85rem 1rem;background:#F4F6FA;margin-bottom:1rem;font-size:16px">
+    <div style="font-weight:700;color:#14305C;margin-bottom:.5rem">Пять свидетельств в хронологическом порядке:</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem .8rem" id="ev-list">
+      <div id="ev1" style="padding:.35rem .5rem;border-left:3px solid #C0C6D4;color:#888">E&#x2081;: Bliss &amp; Lømo (1973) — обнаружение ДП в гиппокампе кролика при высокочастотной стимуляции</div>
+      <div id="ev2" style="padding:.35rem .5rem;border-left:3px solid #C0C6D4;color:#888">E&#x2082;: Collingridge et al. (1983) — NMDA-рецепторы необходимы для индукции ДП</div>
+      <div id="ev3" style="padding:.35rem .5rem;border-left:3px solid #C0C6D4;color:#888">E&#x2083;: Morris et al. (1986) — блокада NMDA нарушает пространственное обучение у крыс</div>
+      <div id="ev4" style="padding:.35rem .5rem;border-left:3px solid #C0C6D4;color:#888">E&#x2084;: Frey &amp; Morris (1997) — поздняя фаза ДП требует синтеза белка, как и долговременная память</div>
+      <div id="ev5" style="padding:.35rem .5rem;border-left:3px solid #C0C6D4;color:#888">E&#x2085;: Bliss et al. (2023) — прямая нейровизуализация: ДП коррелирует с формированием следов памяти у людей</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:start;margin-bottom:.9rem">
+    <div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:.4rem">Начальный прайор скептика</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem">
+        <span style="font-size:15px;font-weight:600;color:#222">P(H) скептика</span>
+        <span style="font-family:'Courier New',monospace;font-size:20px;font-weight:700;color:#7A1010" id="nsk-v">10%</span>
+      </div>
+      <input type="range" id="nsk" min="1" max="49" value="10" oninput="upN()" style="-webkit-appearance:none;width:100%;height:10px;background:#C0C6D4;border-radius:5px;cursor:pointer">
+      <style>#nsk::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#7A1010;border:3px solid #FFF;box-shadow:0 0 0 2px #7A1010;cursor:pointer}</style>
+    </div>
+    <div style="padding-top:2rem;text-align:center;font-size:22px;font-weight:700;color:#9AA4B4">vs</div>
+    <div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:.4rem">Начальный прайор сторонника</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem">
+        <span style="font-size:15px;font-weight:600;color:#222">P(H) сторонника</span>
+        <span style="font-family:'Courier New',monospace;font-size:20px;font-weight:700;color:#0F5C2E" id="nbel-v">70%</span>
+      </div>
+      <input type="range" id="nbel" min="51" max="99" value="70" oninput="upN()" style="-webkit-appearance:none;width:100%;height:10px;background:#C0C6D4;border-radius:5px;cursor:pointer">
+      <style>#nbel::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#0F5C2E;border:3px solid #FFF;box-shadow:0 0 0 2px #0F5C2E;cursor:pointer}</style>
+    </div>
+  </div>
+
+  <div style="margin-bottom:.5rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
+      <span style="font-size:17px;font-weight:700;color:#14305C">Количество свидетельств N</span>
+      <span style="font-family:'Courier New',monospace;font-size:24px;font-weight:700;color:#14305C" id="nn-v">0</span>
+    </div>
+    <input type="range" id="nn" min="0" max="5" value="0" oninput="upN()" style="-webkit-appearance:none;width:100%;height:10px;background:#C0C6D4;border-radius:5px;cursor:pointer">
+    <style>#nn::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#14305C;border:3px solid #FFF;box-shadow:0 0 0 2px #14305C;cursor:pointer}</style>
+    <div style="display:flex;justify-content:space-between;font-size:13px;color:#777;margin-top:.2rem">
+      <span>0 — нет данных</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5 — все свидетельства</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#888;border:2px solid #888;margin:.8rem 0">
+    <div style="background:#FFF0F0;padding:.85rem;text-align:center">
+      <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#7A1010;margin-bottom:.25rem">Скептик P(H|E&#x2081;...E&#x2099;)</div>
+      <div style="font-family:'Courier New',monospace;font-size:44px;font-weight:700;color:#7A1010" id="nsk-po">10%</div>
+      <div style="height:12px;background:#F8D8D8;border-radius:6px;margin-top:.6rem;overflow:hidden"><div style="height:100%;border-radius:6px;background:#7A1010;transition:width .4s ease" id="nsk-bar" style="width:10%"></div></div>
+    </div>
+    <div style="background:#F0FFF5;padding:.85rem;text-align:center">
+      <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#0F5C2E;margin-bottom:.25rem">Сторонник P(H|E&#x2081;...E&#x2099;)</div>
+      <div style="font-family:'Courier New',monospace;font-size:44px;font-weight:700;color:#0F5C2E" id="nbel-po">70%</div>
+      <div style="height:12px;background:#C8EED8;border-radius:6px;margin-top:.6rem;overflow:hidden"><div style="height:100%;border-radius:6px;background:#0F5C2E;transition:width .4s ease" id="nbel-bar" style="width:70%"></div></div>
+    </div>
+  </div>
+
+  <div style="padding:.7rem 1rem;border:2px solid #14305C;background:#EEF3FA;margin:.5rem 0;font-family:'Courier New',monospace;font-size:16px;color:#14305C" id="n-odds">—</div>
+
+  <div class="comm" id="n-comm">Передвиньте слайдер N, чтобы увидеть накопление свидетельств.</div>
+
+  <div style="border:2px solid #14305C;padding:.9rem 1.1rem;background:#F9FAFC;margin-top:.8rem">
+    <div style="font-size:17px;font-weight:700;color:#14305C;margin-bottom:.5rem">Почему это важно философски</div>
+    <div style="font-size:16px;color:#111;line-height:1.6">
+      Достаточное накопление независимых свидетельств приводит к <strong>байесовской конвергенции</strong>: скептик и сторонник, начавшие с разных прайоров, неизбежно приходят к близким апостериорным вероятностям. Это байесовский ответ на обвинение в релятивизме: субъективность прайора — не дефект, а честное описание начальной позиции. Наука как институт работает именно через накопление независимых свидетельств, а не через унификацию прайоров.
+    </div>
+  </div>
+</section>
+
+</main>
+<script>
+function pct(v){return(v*100).toFixed(1)+'%'}
+
+function upAll(){
+  const pE=+document.getElementById('pe').value/100;
+  document.getElementById('pe-v').textContent=Math.round(pE*100)+'%';
+
+  function calcSci(phId,pehId,prodId,penhId,errId,resId,poId,fmlId,barId){
+    const pH=+document.getElementById(phId).value/100;
+    const pEH=+document.getElementById(pehId).value/100;
+    const prod=pH*pEH;
+    const ok=pE>=prod-0.0001;
+    // Display prod
+    document.getElementById(prodId).textContent=pct(prod);
+    document.getElementById(prodId).className='implied-val '+(ok?'ok':'warn');
+    // Implied P(E|¬H)
+    const penh=pH<1?(pE-pEH*pH)/(1-pH):0;
+    const penhOk=ok&&penh>=0&&penh<=1;
+    document.getElementById(penhId).textContent=penhOk?pct(penh):'н/д';
+    document.getElementById(penhId).className='implied-val '+(penhOk?'ok':'warn');
+    // Error banner
+    document.getElementById(errId).style.display=ok?'none':'block';
+    // Result
+    const res=document.getElementById(resId);
+    if(!ok){
+      res.className='res err';
+      document.getElementById(poId).textContent='ОШИБКА';
+      document.getElementById(fmlId).textContent='P(E) < P(H)×P(E|H)';
+      document.getElementById(barId).style.width='0%';
+      return null;
+    }
+    const po=pE>0?pH*pEH/pE:0;
+    res.className='res';
+    document.getElementById(poId).textContent=pct(po);
+    document.getElementById(fmlId).textContent=Math.round(pH*100)+'% × '+Math.round(pEH*100)+'% / '+Math.round(pE*100)+'%';
+    document.getElementById(barId).style.width=(po*100)+'%';
+    return po;
+  }
+
+  document.getElementById('s1ph-v').textContent=Math.round(+document.getElementById('s1ph').value)+'%';
+  document.getElementById('s1eh-v').textContent=Math.round(+document.getElementById('s1eh').value)+'%';
+  document.getElementById('s2ph-v').textContent=Math.round(+document.getElementById('s2ph').value)+'%';
+  document.getElementById('s2eh-v').textContent=Math.round(+document.getElementById('s2eh').value)+'%';
+
+  const po1=calcSci('s1ph','s1eh','s1-prod','s1-penh','s1-err','s1-res','s1-po','s1-fml','s1-bar');
+  const po2=calcSci('s2ph','s2eh','s2-prod','s2-penh','s2-err','s2-res','s2-po','s2-fml','s2-bar');
+
+  if(po1!==null&&po2!==null){
+    const diff=Math.abs(po1-po2);
+    let c='';
+    if(diff>0.3)c=`Из-за разной стартовой позиции — разные выводы из одних данных: ${pct(po1)} (Учёный №1) против ${pct(po2)} (Учёный №2). Разрыв ${pct(diff)}. Оба применяют формулу правильно. Это не релятивизм.`;
+    else if(diff>0.1)c=`Умеренное расхождение ${pct(diff)}: учёные рассуждают по-разному. Байесовская конвергенция: при накоплении свидетельств разрыв сокращается.`;
+    else c=`Позиции близки (разрыв ${pct(diff)}): схожие прайоры или P(E|H) привели к близким выводам.`;
+    document.getElementById('sci-comm').textContent=c;
+  } else {
+    document.getElementById('sci-comm').textContent='Исправьте ошибку (см. выше), чтобы увидеть интерпретацию.';
+  }
+}
+
+function upDQ(){
+  const pH=+document.getElementById('dq-ph').value/100;
+  const pEH=0.15;const pEnH=0.70;
+  document.getElementById('dq-ph-v').textContent=Math.round(pH*100)+'%';
+  const pE=pEH*pH+pEnH*(1-pH);
+  const po=pE>0?pH*pEH/pE:0;
+  document.getElementById('dq-pr').textContent=pct(pH);
+  document.getElementById('dq-pe').textContent=pct(pEH)+'×'+pct(pH)+' + '+pct(pEnH)+'×'+pct(1-pH)+' = '+pct(pE);
+  document.getElementById('dq-po').textContent=pct(po);
+  const col=po>0.45?'#0F5C2E':po>0.2?'#14305C':'#7A1010';
+  document.getElementById('dq-po').style.color=col;
+  document.getElementById('dq-bar').style.width=(po*100)+'%';
+  document.getElementById('dq-bar').style.background=col;
+  const ve=document.getElementById('dq-verdict');
+  const ce=document.getElementById('dq-comm');
+  if(po<0.15){
+    ve.className='verdict v-stop';
+    ve.textContent='P(H|E) = '+pct(po)+' — препарат, скорее всего, неэффективен. Рационально прекратить.';
+    ce.textContent='Низкий прайор P(H) = '+pct(pH)+' и неудачный опыт взаимно усиливают скептицизм. Байесовская арифметика и Поппер согласны: гипотезу следует отвергнуть.';
+  } else if(po<0.40){
+    ve.className='verdict v-wait';
+    ve.textContent='P(H|E) = '+pct(po)+' — результат неопределённый. Нужны дополнительные эксперименты.';
+    ce.textContent='Тезис Дюгема: исследователь ищет вспомогательные гипотезы для объяснения неудачи. Ни отказ, ни продолжение не обоснованы без новых данных.';
+  } else {
+    ve.className='verdict v-go';
+    ve.textContent='P(H|E) = '+pct(po)+' — несмотря на неудачу, вера в препарат остаётся высокой. Рационально продолжать.';
+    ce.textContent='Тезис Дюгема–Куайна в сильной версии: высокий прайор P(H) = '+pct(pH)+' поглотил неудачный эксперимент. Учёный рационально удерживает теорию и ищет конфаундеры, другую дозировку, ошибку дизайна. Попперовская немедленная фальсификация математически не оправдана. Пример: Барри Маршалл (1984) — высокий личный прайор о роли H. pylori при низком прайоре медицинского сообщества.';
+  }
+}
+
+upAll();upDQ();
+
+function upN(){
+  const psk = +document.getElementById('nsk').value/100;
+  const pbel = +document.getElementById('nbel').value/100;
+  const N = +document.getElementById('nn').value;
+  const pEH=0.80, pEnH=0.20;
+  document.getElementById('nsk-v').textContent=Math.round(psk*100)+'%';
+  document.getElementById('nbel-v').textContent=Math.round(pbel*100)+'%';
+  document.getElementById('nn-v').textContent=N;
+
+  // Highlight active evidence items
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('ev'+i);
+    if(i<=N){
+      el.style.borderLeftColor='#14305C';
+      el.style.color='#111';
+      el.style.fontWeight='600';
+    } else {
+      el.style.borderLeftColor='#C0C6D4';
+      el.style.color='#888';
+      el.style.fontWeight='400';
+    }
+  }
+
+  // Bayesian update N times using odds form
+  function update(p0, n){
+    let odds = p0/(1-p0);
+    const lr = pEH/pEnH; // 4
+    odds *= Math.pow(lr,n);
+    return odds/(1+odds);
+  }
+
+  const poSk = N===0 ? psk : update(psk,N);
+  const poBel = N===0 ? pbel : update(pbel,N);
+
+  document.getElementById('nsk-po').textContent=(poSk*100).toFixed(1)+'%';
+  document.getElementById('nbel-po').textContent=(poBel*100).toFixed(1)+'%';
+  document.getElementById('nsk-bar').style.width=(poSk*100)+'%';
+  document.getElementById('nbel-bar').style.width=(poBel*100)+'%';
+
+  const lr=pEH/pEnH;
+  const oddsLabel = N>0 ? `Байесовский фактор: LR = ${pEH.toFixed(2)}/${pEnH.toFixed(2)} = ${lr.toFixed(1)}  |  LR^${N} = ${Math.pow(lr,N).toFixed(0)}×  |  Шансы скептика: ×${Math.pow(lr,N).toFixed(0)}` : 'N = 0: только прайоры, свидетельств нет';
+  document.getElementById('n-odds').textContent=oddsLabel;
+
+  const diff=Math.abs(poSk-poBel);
+  let c='';
+  if(N===0) c='Ещё нет свидетельств. Разрыв между учёными: '+(Math.abs(psk-pbel)*100).toFixed(1)+'%. Передвиньте слайдер N вправо.';
+  else if(diff<0.03) c=`Конвергенция достигнута: после ${N} независимых свидетельств разрыв сократился до ${(diff*100).toFixed(1)}%. Начальные позиции (${Math.round(psk*100)}% и ${Math.round(pbel*100)}%) перестали иметь значение — данные «перевесили» прайоры. Это байесовская теорема слияния мнений.`;
+  else if(diff<0.10) c=`После ${N} свидетельств разрыв сократился до ${(diff*100).toFixed(1)}%. Сближение идёт. Ещё одно-два свидетельства — и прайоры перестанут иметь значение.`;
+  else c=`После ${N} свидетельств разрыв ${(diff*100).toFixed(1)}%. Байесовский фактор LR=${lr.toFixed(0)} за каждое свидетельство. Продолжайте добавлять свидетельства.`;
+  document.getElementById('n-comm').textContent=c;
+}
+upN();
+
+</script>
+</body>
+</html>
